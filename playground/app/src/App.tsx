@@ -38,10 +38,13 @@ const VERDICT_STATUS: Record<string, AnimatedBadgeStatus> = {
   BLOCK: 'danger',
   REFUSE: 'warning',
 };
-// beUI's default warning text (amber-600) is below AA on a light surface —
-// deepen it via class merge (tailwind-merge keeps the last text-*).
+// Dark-only overrides: ALLOW must read blue (info status pulls the amber
+// primary), REFUSE must always read amber — beUI's default warning text is
+// amber-600 off-dark and only upgrades via a dark: media query, which we
+// cannot rely on in a dark-only app. Fixed hex beats both branches.
 const VERDICT_BADGE_CLASS: Record<string, string> = {
-  REFUSE: 'text-amber-700',
+  ALLOW_WITH_CONFIRMATION: 'text-[#7aa2ff]',
+  REFUSE: 'text-[#fbbf24]',
 };
 const VERDICT_TEXT: Record<string, string> = {
   ALLOW_WITH_CONFIRMATION: 'text-ok',
@@ -338,7 +341,7 @@ export function App() {
                 {result.warnings.length > 0 && (
                   <ul className="warnings m-0 list-none p-0">
                     {result.warnings.map((w, i) => (
-                      <li key={i} className="wrap-anywhere mt-1 text-[13px] text-risk">
+                      <li key={i} className="wrap-anywhere mt-1 text-[13px] text-[#fbbf24]">
                         ⚠ {w}
                       </li>
                     ))}
