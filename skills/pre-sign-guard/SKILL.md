@@ -56,3 +56,17 @@ sees exactly what the signature does before it exists.
 - [eip-7702-risk](references/eip-7702-risk.md) — why delegations slip past amount/destination policies.
 - [integration](references/integration.md) — putting the guard in front of a signer, MCP tool, or wallet service.
 - [test-plan](references/test-plan.md) — the case matrix and how to run it.
+
+## Sources & related work
+
+- [ef0100](https://github.com/ef0100dev/ef0100) — signer-side guard built on
+  the same incident (KMS/HSM/MPC focus; live-nonce checks, rate limits, Solana).
+- [808bits byte-level write-up](https://808bits.com/articles/binance-hot-wallet-eip-7702-delegations/)
+  + [raw transaction decoder](https://808bits.com/tools/raw-transaction-decoder/).
+- [ecdsa.com EIP-7702 decoder](https://ecdsa.com/tools/eip7702-decoder).
+- Custody-side controls: [Turnkey 7702 policies](https://docs.turnkey.com/features/policies/examples/ethereum) ·
+  [Privy `eth_sign7702Authorization` policies](https://docs.privy.io/controls/policies/example-policies/ethereum) ·
+  [Coinbase CDP `signEvmHash` rules](https://docs.cdp.coinbase.com/api-reference/v2/rest-api/policy-engine/policy-engine).
+- [@mattiascaricato — reject 0x05](https://x.com/mattiascaricato/status/2115976679042482265).
+- Unrelated, similar name: [Fizzl13/presign-guard](https://github.com/Fizzl13/presign-guard)
+  (hosted, paid check API).

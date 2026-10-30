@@ -64,6 +64,13 @@ preimage by its first byte, and give `0x05` (and a type-4 transaction’s
 `authorization_list`) its own default — BLOCK — because nothing downstream can
 see what it grants.**
 
+Custody providers do ship controls for this class — Turnkey's
+`eth.eip_7702_authorization` policies, Privy's `eth_sign7702Authorization`
+rules, Coinbase CDP's `signEvmHash` rejection (links in the README's prior-art
+section). They gate requests that pass through their engines; this document
+covers the lane they can't reach — a request path that is already compromised
+upstream, or a signer that signs digests it is handed.
+
 ## What this guard is, and is not
 
 It is a check *in front of* a key that signs what it is handed — an agent with

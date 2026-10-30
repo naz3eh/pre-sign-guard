@@ -1,11 +1,11 @@
 # pre-sign-guard
 
-An agent skill and a small checker that sit in front of any key before it
-signs. One rule drives both: **never sign what you cannot see.**
+*Not affiliated with [Fizzl13/presign-guard](https://github.com/Fizzl13/presign-guard) or any token.*
 
-Signers get handed payloads — a bare 32-byte hash, a blob of hex — and most of
-the time the only question asked is "is this on the allowed path?" This guard
-asks a different question first: *what does this signature actually grant?*
+pre-sign-guard is a free, offline agent skill + small TS checker + browser
+playground that walks an AI agent through pre-sign checks: get the preimage,
+verify it, decode it, explain it in plain words, and wait for a human yes.
+One rule drives all three: **never sign what you cannot see.**
 
 ## Why
 
@@ -13,9 +13,10 @@ On October 29–30, 2026, Binance hot wallets were drained. Binance said no
 private key leaked: a compromised DevOps laptop reached a service container,
 and the signer produced **fifty EIP-7702 authorizations** for the "Binance 14"
 wallet. One authorization carries no amount, no destination, and no calldata —
-it only says "let this contract run as my account" — so policies that check
-those fields saw nothing to reject. One entry matched the live nonce; the
-delegate emptied the wallet.
+it only says "let this contract run as my account" — and the request path was
+already compromised, so even the 7702- and raw-hash rules custody providers
+ship (see [Prior art](#prior-art--related-work)) never got a chance to fire.
+One entry matched the live nonce; the delegate emptied the wallet.
 ([sources](#sources) — 808bits for the byte-level write-up, Binance's
 statement, on-chain data.)
 
@@ -23,6 +24,34 @@ This repo does not claim it would have stopped that. The request path was
 already compromised. It is a guard for agents and services that sign what they
 are handed: if a request can't be decoded into something a human can read, it
 gets refused before it ever reaches the key.
+
+## Prior art & related work
+
+This repo sits next to earlier work — check whether one of these fits your case
+first:
+
+- **[ef0100](https://github.com/ef0100dev/ef0100)** is a fuller signer-side
+  guard built on the same incident; if you run KMS/HSM/MPC signers, look at it
+  first. This repo focuses on the agent-side procedure (SKILL.md), explaining
+  EIP-712/personal_sign instead of refusing them, and a paste-anything
+  playground.
+- **[Fizzl13/presign-guard](https://github.com/Fizzl13/presign-guard)** — a
+  hosted, paid (x402) agent pre-sign check API with an MCP server and a skill.
+  A different, unrelated project with a similar name.
+- **[808bits raw transaction decoder](https://808bits.com/tools/raw-transaction-decoder/)**
+  — paste raw tx bytes and get the fields rendered in the browser; their
+  [byte-level write-up](https://808bits.com/articles/binance-hot-wallet-eip-7702-delegations/)
+  is the incident source this repo cites.
+- **[ecdsa.com EIP-7702 decoder](https://ecdsa.com/tools/eip7702-decoder)** —
+  another in-browser decoder for authorization payloads.
+- Custody-side controls that already gate these payloads:
+  [Turnkey's EIP-7702 authorization policies](https://docs.turnkey.com/features/policies/examples/ethereum)
+  (delegate/chain_id/nonce allowlists on `eth.eip_7702_authorization`),
+  [Privy's `eth_sign7702Authorization` policies](https://docs.privy.io/controls/policies/example-policies/ethereum),
+  and [Coinbase CDP policy rules](https://docs.cdp.coinbase.com/api-reference/v2/rest-api/policy-engine/policy-engine),
+  which can reject `signEvmHash` outright.
+- [@mattiascaricato's "reject 0x05" post](https://x.com/mattiascaricato/status/2115976679042482265)
+  — the public call to refuse authorization-prefixed digests.
 
 ## Try it in the browser
 
