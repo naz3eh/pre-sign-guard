@@ -34,9 +34,14 @@ function hashToRequest(hash: string): SignRequest | null {
 }
 
 const VERDICT_STATUS: Record<string, AnimatedBadgeStatus> = {
-  ALLOW_WITH_CONFIRMATION: 'success',
+  ALLOW_WITH_CONFIRMATION: 'info',
   BLOCK: 'danger',
   REFUSE: 'warning',
+};
+// beUI's default warning text (amber-600) is below AA on a light surface —
+// deepen it via class merge (tailwind-merge keeps the last text-*).
+const VERDICT_BADGE_CLASS: Record<string, string> = {
+  REFUSE: 'text-amber-700',
 };
 const VERDICT_TEXT: Record<string, string> = {
   ALLOW_WITH_CONFIRMATION: 'text-ok',
@@ -213,6 +218,7 @@ export function App() {
             onChange={setHash}
             spellCheck={false}
             autoComplete="off"
+            classNames={{ field: 'bg-surface' }}
           />
           <div>
             <label htmlFor="in-preimage" className="mb-1.5 block text-[13px] text-muted-foreground">
@@ -223,7 +229,7 @@ export function App() {
               rows={3}
               spellCheck={false}
               autoComplete="off"
-              className="w-full rounded-lg border border-border bg-card px-3 py-2.5 font-mono text-[13px]/relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-2 focus:outline-ring resize-y"
+              className="w-full rounded-lg border border-border bg-surface px-3 py-2.5 font-mono text-[13px]/relaxed text-foreground placeholder:text-muted-foreground/80 focus:outline-2 focus:outline-ring resize-y"
               placeholder="0x05db019463e842b054bd624a465454d533c33f573e9c6fae8401209df9"
               value={preimage}
               onChange={(e) => setPreimage(e.target.value)}
@@ -245,7 +251,7 @@ export function App() {
                 rows={5}
                 spellCheck={false}
                 autoComplete="off"
-                className="w-full rounded-lg border border-border bg-card px-3 py-2.5 font-mono text-[13px]/relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-2 focus:outline-ring resize-y"
+                className="w-full rounded-lg border border-border bg-surface px-3 py-2.5 font-mono text-[13px]/relaxed text-foreground placeholder:text-muted-foreground/80 focus:outline-2 focus:outline-ring resize-y"
                 placeholder='{"domain": …, "types": …, "primaryType": …, "message": …}'
                 value={typedDataRaw}
                 onChange={(e) => setTypedDataRaw(e.target.value)}
@@ -275,7 +281,7 @@ export function App() {
             animate={{ opacity: 1, y: 0 }}
             exit={reduce ? undefined : { opacity: 0 }}
             transition={{ duration: 0.18 }}
-            className="mt-6 rounded-xl border border-border bg-card p-5"
+            className="mt-6 rounded-xl border border-border bg-card p-5 shadow-sm"
           >
             {error && (
               <div>
@@ -304,7 +310,11 @@ export function App() {
                     aria-live="polite"
                     className="verdict-badge inline-block focus:outline-2 focus:outline-offset-4 focus:outline-ring"
                   >
-                    <AnimatedBadge status={VERDICT_STATUS[result.verdict]} size="md">
+                    <AnimatedBadge
+                      status={VERDICT_STATUS[result.verdict]}
+                      size="md"
+                      className={VERDICT_BADGE_CLASS[result.verdict]}
+                    >
                       {result.verdict}
                     </AnimatedBadge>
                   </span>
@@ -315,7 +325,8 @@ export function App() {
                   )}
                 </div>
                 <div className="kind wrap-anywhere mt-3 text-[13px] text-muted-foreground">
-                  detected type: <code className="wrap-anywhere">{result.kind}</code>
+                  detected type:{' '}
+                  <code className="wrap-anywhere rounded bg-surface px-1.5 py-0.5">{result.kind}</code>
                   {example && (
                     <>
                       {' '}
@@ -349,7 +360,7 @@ export function App() {
                 {result.hash && (
                   <div className="digest mt-3 flex items-center gap-2 text-[13px]">
                     <span className="text-muted-foreground">digest</span>
-                    <code className="wrap-anywhere">{result.hash}</code>
+                    <code className="wrap-anywhere rounded bg-surface px-1.5 py-0.5">{result.hash}</code>
                     <Button
                       type="button"
                       variant="ghost"
@@ -394,7 +405,7 @@ export function App() {
             type="button"
             data-example={ex.id}
             onClick={() => loadExample(ex)}
-            className="example rounded-lg border border-border bg-card p-3.5 text-left font-mono text-[12.5px]/normal text-foreground transition-colors hover:border-muted-foreground focus-visible:outline-2 focus-visible:outline-ring"
+            className="example rounded-lg border border-border bg-card p-3.5 text-left font-mono text-[12.5px]/normal text-foreground shadow-sm transition-colors hover:border-border-strong focus-visible:outline-2 focus-visible:outline-ring"
           >
             <span
               className={`ex-verdict mb-1.5 inline-block rounded-[5px] border border-current px-[7px] py-px text-[11px] font-extrabold tracking-wide ${VERDICT_TEXT[ex.expect.verdict]}`}

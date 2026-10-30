@@ -1,23 +1,24 @@
 @import 'tailwindcss';
 
-/* beUI shared theme tokens (shadcn convention) mapped onto the playground's
-   dark palette — single source for every copied component. */
+/* beUI shared theme tokens (shadcn convention) — light-only palette.
+   Every text color here is chosen to hit WCAG AA on its surface. */
 @theme {
-  --color-background: #0b0d10;
-  --color-foreground: #d8dde3;
-  --color-card: #12151a;
-  --color-card-foreground: #d8dde3;
-  --color-muted: #1a1f26;
-  --color-muted-foreground: #8b939d;
-  --color-border: #23282f;
-  --color-border-strong: #39424e;
-  --color-primary: #e8b339;
-  --color-primary-foreground: #14100a;
-  --color-ring: #e8b339;
-  --color-destructive: #ef6a5e;
-  --color-ok: #46c381;
-  --color-risk: #ffd166;
-  --color-refuse: #b28bd9;
+  --color-background: #f7f8fa;
+  --color-foreground: #1a1d21;
+  --color-card: #ffffff;
+  --color-card-foreground: #1a1d21;
+  --color-muted: #eef0f3;
+  --color-muted-foreground: #525b66;
+  --color-border: #d9dee5;
+  --color-border-strong: #aab3bf;
+  --color-primary: #1d4ed8;
+  --color-primary-foreground: #ffffff;
+  --color-ring: #1d4ed8;
+  --color-destructive: #b42318;
+  --color-ok: #1d4ed8;
+  --color-risk: #b42318;
+  --color-refuse: #b45309;
+  --color-surface: #f1f3f6;
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 }
 
