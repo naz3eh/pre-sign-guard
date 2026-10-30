@@ -76,7 +76,7 @@
           }
         }
       },
-      "expect": { "verdict": "ALLOW_WITH_CONFIRMATION", "kind": "eip712-typed-data", "exit_code": 0, "summary_contains": ["APPROVAL"] }
+      "expect": { "verdict": "ALLOW_WITH_CONFIRMATION", "kind": "eip712-typed-data", "exit_code": 0, "summary_contains": ["APPROVAL", "HIGH RISK: unlimited approval"] }
     },
     {
       "id": "eth-transfer-confirmed",
@@ -85,6 +85,12 @@
         "preimage": "0x02f0012a8459682f008506fc23ac008252089495222290dd7278aa3ddd389cc1e1d165cc4bafe58803782dace9d9000080c0"
       },
       "expect": { "verdict": "ALLOW_WITH_CONFIRMATION", "kind": "typed-transaction-0x02", "exit_code": 0, "summary_contains": ["0.25 ETH", "0x95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5"] }
+    },
+    {
+      "id": "odd-hex-refused",
+      "description": "An odd-length hex preimage cannot be byte-decoded — must refuse as invalid input, not misclassify it.",
+      "request": { "preimage": "0x05abc" },
+      "expect": { "verdict": "REFUSE", "kind": "invalid-input", "exit_code": 3, "summary_contains": ["odd-length hex"] }
     },
     {
       "id": "digest-mismatch-refused",

@@ -107,6 +107,9 @@ export function check(req: SignRequest, opts: CheckOptions = {}): CheckResult {
   if (req.preimage !== undefined && !isHex(req.preimage)) {
     return refuse('invalid-input', 'the preimage is not hex — cannot evaluate', hash);
   }
+  if (req.preimage !== undefined && (req.preimage.length - 2) % 2 !== 0) {
+    return refuse('invalid-input', 'odd-length hex — cannot evaluate', hash);
+  }
 
   // EIP-712 typed data: recompute the digest and require it to match any given hash.
   if (typedData) {
@@ -382,6 +385,21 @@ function render712(
   if (grantKeys.length > 0 && warnings.length === 0) {
     warnings.push(`APPROVAL-STYLE TYPED DATA: message grants rights via field(s) ${grantKeys.join(', ')}`);
   }
+  const UNLIMITED_THRESHOLD = 1n << 255n;
+  const exceedsLimit = (v: unknown): boolean => {
+    if (v == null) return false;
+    if (typeof v === 'object') return Object.values(v).some(exceedsLimit);
+    return /^\d+$/.test(String(v)) && BigInt(String(v)) >= UNLIMITED_THRESHOLD;
+  };
+  const unlimited =
+    exceedsLimit(message) ||
+    /setApprovalForAll|approvalForAll/i.test(primaryType) ||
+    /true/i.test(String(message.approved));
+  if (unlimited) {
+    warnings.push(
+      'HIGH RISK: unlimited approval — this grants the spender effectively unlimited withdrawal rights over your tokens',
+    );
+  }
   if (/setApprovalForAll|approvalForAll/i.test(primaryType) || /true/i.test(String(message.approved))) {
     warnings.push('GRANTS CONTROL OF EVERY TOKEN YOU HOLD IN THIS COLLECTION — not a single-item approval');
   }
@@ -437,7 +455,7 @@ function decodeTypedTx(typeByte: number, rest: Uint8Array, opts: CheckOptions, h
   const warnings: string[] = [];
   const dataHex = bytesToHex(data);
   const call = decodeCallData(dataHex);
-  fields.push({ label: 'data', value: call ? call.text : dataHex === '0x' ? '(none — plain ETH transfer)' : `${(dataHex.length - 2) / 2} bytes: ${dataHex.slice(0, 18)}…` });
+  fields.push({ label: 'data', value: call ? call.text : dataHex === '0x' ? (typeByte === 0x04 ? '(none)' : '(none — plain ETH transfer)') : `${(dataHex.length - 2) / 2} bytes: ${dataHex.slice(0, 18)}…` });
   if (call) warnings.push(...call.warnings);
 
   if (signed) {

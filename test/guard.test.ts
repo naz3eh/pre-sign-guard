@@ -186,6 +186,12 @@ describe('EIP-712 typed data (0x19 0x01)', () => {
     expect(res.fields.find((f) => f.label === 'domain.name')!.value).toBe('USD Coin');
   });
 
+  it('flags an unlimited Permit as HIGH RISK', () => {
+    // value = uint256.max in the fixture → HIGH RISK flag for badge/CLI/evals.
+    const res = check({ typedData: permitTypedData });
+    expect(res.warnings.some((w) => w.startsWith('HIGH RISK: unlimited approval'))).toBe(true);
+  });
+
   it('recomputes the digest and verifies a given hash', () => {
     const digest = hashTypedData(permitTypedData as Parameters<typeof hashTypedData>[0]);
     const res = check({ hash: digest, typedData: permitTypedData });
@@ -278,6 +284,13 @@ describe('refusals', () => {
     const res = check({ preimage: '0x0a1234' });
     expect(res.verdict).toBe('REFUSE');
     expect(res.kind).toBe('unknown-prefix');
+  });
+
+  it('refuses odd-length hex as invalid input', () => {
+    const res = check({ preimage: '0x05abc' });
+    expect(res.verdict).toBe('REFUSE');
+    expect(res.kind).toBe('invalid-input');
+    expect(res.reason).toContain('odd-length hex');
   });
 
   it('refuses a malformed 0x05 payload', () => {

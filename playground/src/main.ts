@@ -22,7 +22,7 @@ function verdictClass(v: string): string {
 }
 
 function verdictLabel(v: string): string {
-  return v === 'ALLOW_WITH_CONFIRMATION' ? 'ALLOW with confirmation' : v;
+  return v; // labels render exactly: ALLOW_WITH_CONFIRMATION / BLOCK / REFUSE
 }
 
 // Shareable URL: inputs live in the fragment, never sent to a server.
@@ -96,10 +96,11 @@ function initDom(): void {
       )
       .join(' · ');
 
+    const risk = res.warnings.find((w) => w.startsWith('HIGH RISK'));
     out.innerHTML = `
-      <div class="verdict-badge ${verdictClass(res.verdict)}" role="status" aria-live="polite">
+      <div class="verdict-badge ${verdictClass(res.verdict)}" role="status" aria-live="polite" tabindex="-1">
         ${verdictLabel(res.verdict)}
-      </div>
+      </div>${risk ? `<span class="risk-flag">${esc(risk)}</span>` : ''}
       <div class="kind">detected type: <code>${esc(res.kind)}</code>${
         example ? ` · expected: ${esc(example.expect.verdict)} (${esc(example.expect.kind)})` : ''
       }</div>
@@ -115,9 +116,19 @@ function initDom(): void {
 
   function showMessage(cls: string, label: string, msg: string): void {
     out.innerHTML =
-      `<div class="verdict-badge ${cls}" role="alert">${esc(label)}</div>` +
+      `<div class="verdict-badge ${cls}" role="alert" tabindex="-1">${esc(label)}</div>` +
       `<div class="reason"><p>${esc(msg)}</p></div>`;
     out.hidden = false;
+    focusVerdict();
+  }
+
+  function focusVerdict(): void {
+    // Move keyboard/screen-reader focus and scroll the result into view.
+    const badge = out.querySelector<HTMLElement>('.verdict-badge');
+    if (badge) {
+      badge.focus({ preventScroll: true });
+    }
+    out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
   function runCheck(example?: Example): void {
@@ -137,6 +148,7 @@ function initDom(): void {
       return showMessage('v-refuse', 'error', (e as Error).message);
     }
     render(res, example);
+    focusVerdict();
     history.replaceState(null, '', requestToHash(req));
   }
 
@@ -166,6 +178,10 @@ function initDom(): void {
   }
 
   $('#check-btn').addEventListener('click', () => runCheck());
+  $('#form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    runCheck();
+  });
   $('#copy-link').addEventListener('click', async () => {
     const btn = $('#copy-link');
     try {

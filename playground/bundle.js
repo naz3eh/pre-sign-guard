@@ -3268,6 +3268,9 @@ var PreSignGuard = (() => {
     if (req.preimage !== void 0 && !isHex(req.preimage)) {
       return refuse("invalid-input", "the preimage is not hex \u2014 cannot evaluate", hash2);
     }
+    if (req.preimage !== void 0 && (req.preimage.length - 2) % 2 !== 0) {
+      return refuse("invalid-input", "odd-length hex \u2014 cannot evaluate", hash2);
+    }
     if (typedData) {
       let digest2;
       try {
@@ -3489,6 +3492,18 @@ var PreSignGuard = (() => {
     if (grantKeys.length > 0 && warnings.length === 0) {
       warnings.push(`APPROVAL-STYLE TYPED DATA: message grants rights via field(s) ${grantKeys.join(", ")}`);
     }
+    const UNLIMITED_THRESHOLD = 1n << 255n;
+    const exceedsLimit = (v) => {
+      if (v == null) return false;
+      if (typeof v === "object") return Object.values(v).some(exceedsLimit);
+      return /^\d+$/.test(String(v)) && BigInt(String(v)) >= UNLIMITED_THRESHOLD;
+    };
+    const unlimited = exceedsLimit(message) || /setApprovalForAll|approvalForAll/i.test(primaryType) || /true/i.test(String(message.approved));
+    if (unlimited) {
+      warnings.push(
+        "HIGH RISK: unlimited approval \u2014 this grants the spender effectively unlimited withdrawal rights over your tokens"
+      );
+    }
     if (/setApprovalForAll|approvalForAll/i.test(primaryType) || /true/i.test(String(message.approved))) {
       warnings.push("GRANTS CONTROL OF EVERY TOKEN YOU HOLD IN THIS COLLECTION \u2014 not a single-item approval");
     }
@@ -3535,7 +3550,7 @@ var PreSignGuard = (() => {
     const warnings = [];
     const dataHex = bytesToHex(data);
     const call = decodeCallData(dataHex);
-    fields.push({ label: "data", value: call ? call.text : dataHex === "0x" ? "(none \u2014 plain ETH transfer)" : `${(dataHex.length - 2) / 2} bytes: ${dataHex.slice(0, 18)}\u2026` });
+    fields.push({ label: "data", value: call ? call.text : dataHex === "0x" ? typeByte === 4 ? "(none)" : "(none \u2014 plain ETH transfer)" : `${(dataHex.length - 2) / 2} bytes: ${dataHex.slice(0, 18)}\u2026` });
     if (call) warnings.push(...call.warnings);
     if (signed) {
       const [yp, r, s] = list.slice(-3);
@@ -3747,7 +3762,7 @@ var PreSignGuard = (() => {
     return v === "BLOCK" ? "v-block" : v === "REFUSE" ? "v-refuse" : "v-ok";
   }
   function verdictLabel(v) {
-    return v === "ALLOW_WITH_CONFIRMATION" ? "ALLOW with confirmation" : v;
+    return v;
   }
   function requestToHash(req) {
     return `#r=${encodeURIComponent(JSON.stringify(req))}`;
@@ -3804,10 +3819,11 @@ var PreSignGuard = (() => {
       const sources = (example?.sources ?? []).map(
         (s) => `<a href="${esc(s.href)}" target="_blank" rel="noopener noreferrer">${esc(s.label)} \u2197</a>`
       ).join(" \xB7 ");
+      const risk = res.warnings.find((w) => w.startsWith("HIGH RISK"));
       out.innerHTML = `
-      <div class="verdict-badge ${verdictClass(res.verdict)}" role="status" aria-live="polite">
+      <div class="verdict-badge ${verdictClass(res.verdict)}" role="status" aria-live="polite" tabindex="-1">
         ${verdictLabel(res.verdict)}
-      </div>
+      </div>${risk ? `<span class="risk-flag">${esc(risk)}</span>` : ""}
       <div class="kind">detected type: <code>${esc(res.kind)}</code>${example ? ` \xB7 expected: ${esc(example.expect.verdict)} (${esc(example.expect.kind)})` : ""}</div>
       <p class="title">${esc(res.title)}</p>
       ${warnings ? `<ul class="warnings">${warnings}</ul>` : ""}
@@ -3819,8 +3835,16 @@ var PreSignGuard = (() => {
       out.hidden = false;
     }
     function showMessage(cls, label, msg) {
-      out.innerHTML = `<div class="verdict-badge ${cls}" role="alert">${esc(label)}</div><div class="reason"><p>${esc(msg)}</p></div>`;
+      out.innerHTML = `<div class="verdict-badge ${cls}" role="alert" tabindex="-1">${esc(label)}</div><div class="reason"><p>${esc(msg)}</p></div>`;
       out.hidden = false;
+      focusVerdict();
+    }
+    function focusVerdict() {
+      const badge = out.querySelector(".verdict-badge");
+      if (badge) {
+        badge.focus({ preventScroll: true });
+      }
+      out.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
     function runCheck(example) {
       const { req, error } = readRequest();
@@ -3839,6 +3863,7 @@ var PreSignGuard = (() => {
         return showMessage("v-refuse", "error", e.message);
       }
       render(res, example);
+      focusVerdict();
       history.replaceState(null, "", requestToHash(req));
     }
     function fillInputs(req) {
@@ -3861,6 +3886,10 @@ var PreSignGuard = (() => {
       examplesEl.appendChild(card);
     }
     $("#check-btn").addEventListener("click", () => runCheck());
+    $("#form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      runCheck();
+    });
     $("#copy-link").addEventListener("click", async () => {
       const btn = $("#copy-link");
       try {
