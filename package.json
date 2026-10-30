@@ -1,0 +1,29 @@
+{
+  "name": "pre-sign-guard",
+  "version": "0.1.0",
+  "description": "A checker and agent skill that decodes EVM signing payloads before a key signs them: refuses unseen hashes, blocks EIP-7702 delegations, and explains everything else in plain words.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "guard": "./bin/guard"
+  },
+  "scripts": {
+    "guard": "tsx src/cli.ts",
+    "demo": "bash demo/run.sh",
+    "test": "vitest run",
+    "evals": "tsx evals/run.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "viem": "^2.38.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

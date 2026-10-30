@@ -1,0 +1,105 @@
+{
+  "source_repository": "https://github.com/naz3eh/pre-sign-guard",
+  "description": "Executable guard-behavior cases. Each request is fed to the guard (evals/run.ts or vitest) and the verdict + summary must match. Cases marked 'chain data' use real on-chain payloads cited in demo/binance14.ts; the rest are constructed test vectors (Hardhat/Anvil well-known test accounts, never real keys).",
+  "cases": [
+    {
+      "id": "bare-hash-refused",
+      "description": "A signer handed only a 32-byte digest must refuse — nothing is visible about what it commits to.",
+      "request": { "hash": "0xd4fd4e189132273036449fc9e11198c739161b4c0116a9a2dccdfa1c492006f1" },
+      "expect": { "verdict": "REFUSE", "kind": "bare-hash", "exit_code": 3 }
+    },
+    {
+      "id": "binance14-authorization-blocked",
+      "description": "Real chain data: authorization #15 of carrier tx 0xad99264d5532ae0dd04b2004eebda05f25657e70dacb764f7ac8d4ccd051298b (block 26300753) signed by Binance 14, delegating to 0x63e8…6fAe. Must BLOCK.",
+      "request": {
+        "hash": "0xac384c3e6b0b119b06b4f409343faffa32a7410c91e9f049684e59513d2674ac",
+        "preimage": "0x05db019463e842b054bd624a465454d533c33f573e9c6fae8401209df9"
+      },
+      "expect": {
+        "verdict": "BLOCK",
+        "kind": "eip7702-authorization",
+        "exit_code": 2,
+        "summary_contains": ["0x63e842B054Bd624a465454D533C33F573e9c6fAe", "18914809", "chain 1"]
+      }
+    },
+    {
+      "id": "set-code-tx-blocked",
+      "description": "A type-4 (EIP-7702 set-code) transaction carrying an authorization list must BLOCK the same way as a raw 0x05 authorization.",
+      "request": {
+        "preimage": "0x04f88b010a843b9aca00852e90edd0008307a1209428c6c06298d514db089934071355e5743bf21d608080c0f860f85e019463e842b054bd624a465454d533c33f573e9c6fae8401209df980a0ed435cb6590c132cb816dbd0dde4a21b8aaf7eea84927bc8950c314e9a92709aa01da64aaca69487253b1cb1cfff1977631c134d985f2c625450370850870adc75"
+      },
+      "expect": { "verdict": "BLOCK", "kind": "eip7702-set-code-tx", "exit_code": 2 }
+    },
+    {
+      "id": "chain-id-zero-flagged",
+      "description": "A 0x05 authorization with chain_id 0 is valid on EVERY chain — must BLOCK and flag loudly.",
+      "request": {
+        "preimage": "0x05d78094f39fd6e51aad88f6f4ce6ab8827279cfffb9226601"
+      },
+      "expect": { "verdict": "BLOCK", "kind": "eip7702-authorization", "exit_code": 2, "summary_contains": ["EVERY CHAIN"] }
+    },
+    {
+      "id": "personal-sign-decoded",
+      "description": "personal_sign (EIP-191 v0x45) must decode and display the full message for confirmation.",
+      "request": {
+        "preimage": "0x19457468657265756d205369676e6564204d6573736167653a0a34304920616d20617574686f72697a696e67206c6f67696e20666f72206167656e742e6578616d706c65"
+      },
+      "expect": {
+        "verdict": "ALLOW_WITH_CONFIRMATION",
+        "kind": "eip191-personal-sign",
+        "exit_code": 0,
+        "summary_contains": ["I am authorizing login for agent.example"]
+      }
+    },
+    {
+      "id": "eip712-permit-flagged",
+      "description": "An EIP-712 Permit (unlimited spender grant) must be flagged loudly as an approval-style signature.",
+      "request": {
+        "typedData": {
+          "domain": { "name": "USD Coin", "version": "2", "chainId": 1, "verifyingContract": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" },
+          "types": {
+            "Permit": [
+              { "name": "owner", "type": "address" },
+              { "name": "spender", "type": "address" },
+              { "name": "value", "type": "uint256" },
+              { "name": "nonce", "type": "uint256" },
+              { "name": "deadline", "type": "uint256" }
+            ]
+          },
+          "primaryType": "Permit",
+          "message": {
+            "owner": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+            "spender": "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+            "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+            "nonce": "0",
+            "deadline": "1893456000"
+          }
+        }
+      },
+      "expect": { "verdict": "ALLOW_WITH_CONFIRMATION", "kind": "eip712-typed-data", "exit_code": 0, "summary_contains": ["APPROVAL"] }
+    },
+    {
+      "id": "eth-transfer-confirmed",
+      "description": "A plain EIP-1559 ETH transfer decodes and is allowed with confirmation (constructed test vector).",
+      "request": {
+        "preimage": "0x02f0012a8459682f008506fc23ac008252089495222290dd7278aa3ddd389cc1e1d165cc4bafe58803782dace9d9000080c0"
+      },
+      "expect": { "verdict": "ALLOW_WITH_CONFIRMATION", "kind": "typed-transaction-0x02", "exit_code": 0, "summary_contains": ["0.25 ETH", "0x95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5"] }
+    },
+    {
+      "id": "digest-mismatch-refused",
+      "description": "A preimage that does not hash to the supplied digest must refuse — the request is inconsistent.",
+      "request": {
+        "hash": "0xd4fd4e189132273036449fc9e11198c739161b4c0116a9a2dccdfa1c492006f1",
+        "preimage": "0x05db019463e842b054bd624a465454d533c33f573e9c6fae8401209df9"
+      },
+      "expect": { "verdict": "REFUSE", "kind": "digest-mismatch", "exit_code": 3 }
+    },
+    {
+      "id": "unknown-prefix-refused",
+      "description": "An unrecognized first byte must refuse as unknown.",
+      "request": { "preimage": "0x0a1234" },
+      "expect": { "verdict": "REFUSE", "kind": "unknown-prefix", "exit_code": 3 }
+    }
+  ]
+}
