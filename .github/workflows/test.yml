@@ -14,5 +14,13 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
+      - run: npm run build:playground
+      - run: git diff --exit-code playground/bundle.js
       - run: npm test
       - run: npm run evals
+      - name: Install Playwright browser
+        if: matrix.node == 22
+        run: npx playwright install --with-deps chromium
+      - name: Playwright smoke test
+        if: matrix.node == 22
+        run: npm run test:browser

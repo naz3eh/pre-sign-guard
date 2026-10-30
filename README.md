@@ -24,6 +24,21 @@ already compromised. It is a guard for agents and services that sign what they
 are handed: if a request can't be decoded into something a human can read, it
 gets refused before it ever reaches the key.
 
+## Try it in the browser
+
+**Playground:** <https://naz3eh.github.io/pre-sign-guard/playground/> — paste a
+digest, a payload, or EIP-712 typed data and get the guard's verdict instantly.
+It runs the same `src/` library as the CLI, bundled into one file — the two can
+never disagree. Fully client-side: no backend, no wallet, no RPC, no analytics;
+nothing you paste leaves the page. Never paste a private key or seed phrase.
+
+Seven one-click examples come from the repo's own fixtures — the real Binance 14
+authorization, a set-code transaction, an ETH transfer, personal_sign, an
+EIP-712 Permit, a bare hash, and an unknown prefix. Every case encodes into the
+URL fragment (`#r=…`) so you can link it.
+
+![Playground blocking the real Binance 14 authorization](docs/playground-screenshot.png)
+
 ## The checker
 
 `guard check <payload>` reads the payload, decodes it, prints a plain-English
@@ -97,9 +112,10 @@ Raw skill URL (served by GitHub Pages):
 
 ```sh
 npm install
-npm test            # vitest unit tests + every evals/cases.json case
+npm test            # vitest unit tests + evals cases + playground bundle parity
 npm run evals       # standalone case-table run
 npm run typecheck
+npm run test:browser  # Playwright smoke test (needs: npx playwright install chromium)
 ```
 
 Covers: bare-hash refusal, the real 7702 authorization blocked (plus an
@@ -119,7 +135,8 @@ skills/pre-sign-guard/
 src/                            the checker (guard, rlp, abi, cli)
 bin/guard                       CLI entry
 demo/{binance14.ts,run.sh}      real-chain replay demo
-test/                           unit tests
+playground/                     browser playground (index.html + bundled src/)
+test/                           unit tests + browser smoke test
 evals/{cases.json,run.ts}       behavior case table
 docs/gen-manifest.py            regenerates the index.html manifest
 index.html                      GitHub Pages site

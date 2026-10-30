@@ -12,6 +12,11 @@
   consume it.
 - `index.html` is the GitHub Pages site; `docs/gen-manifest.py` regenerates the
   manifest it embeds. Re-run it whenever md files move.
+- `playground/` is the Pages browser playground. `playground/src/main.ts` imports
+  the real `src/` guard — never reimplement decode logic there. After changing
+  `src/` or `playground/`, re-run `npm run build:playground` and commit the
+  regenerated `playground/bundle.js` (CI fails on a stale bundle). Examples live
+  in `playground/examples.json` — only repo fixtures or cited chain data.
 
 ## Hard rules
 

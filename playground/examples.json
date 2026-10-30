@@ -1,0 +1,107 @@
+[
+  {
+    "id": "binance14-authorization",
+    "label": "Binance 14 — real EIP-7702 authorization",
+    "blurb": "The actual authorization bytes signed by the Binance 14 hot wallet — entry #15 of carrier tx 0xad99264d5532ae0dd04b2004eebda05f25657e70dacb764f7ac8d4ccd051298b (Ethereum block 26300753, Oct 29 2026). Delegates the account to 0x63e8…6fAe. Real chain data, verified on-chain.",
+    "request": {
+      "hash": "0xac384c3e6b0b119b06b4f409343faffa32a7410c91e9f049684e59513d2674ac",
+      "preimage": "0x05db019463e842b054bd624a465454d533c33f573e9c6fae8401209df9"
+    },
+    "expect": { "verdict": "BLOCK", "kind": "eip7702-authorization" },
+    "sources": [
+      { "label": "carrier tx on Etherscan", "href": "https://etherscan.io/tx/0xad99264d5532ae0dd04b2004eebda05f25657e70dacb764f7ac8d4ccd051298b" },
+      { "label": "808bits byte-level write-up", "href": "https://808bits.com/articles/binance-hot-wallet-eip-7702-delegations/" }
+    ]
+  },
+  {
+    "id": "set-code-tx",
+    "label": "Type-4 transaction with an authorization list",
+    "blurb": "A 0x04 (EIP-7702 set-code) transaction preimage carrying the same real delegation in its authorization_list — same grant as a bare 0x05, same BLOCK. The authorization's signature fields are the real Binance 14 tuple from the carrier tx.",
+    "request": {
+      "preimage": "0x04f88b010a843b9aca00852e90edd0008307a1209428c6c06298d514db089934071355e5743bf21d608080c0f860f85e019463e842b054bd624a465454d533c33f573e9c6fae8401209df980a0ed435cb6590c132cb816dbd0dde4a21b8aaf7eea84927bc8950c314e9a92709aa01da64aaca69487253b1cb1cfff1977631c134d985f2c625450370850870adc75"
+    },
+    "expect": { "verdict": "BLOCK", "kind": "eip7702-set-code-tx" },
+    "sources": [
+      { "label": "evals/set-code-tx-blocked", "href": "https://github.com/naz3eh/pre-sign-guard/blob/main/evals/cases.json" }
+    ]
+  },
+  {
+    "id": "eth-transfer",
+    "label": "Normal EIP-1559 ETH transfer",
+    "blurb": "A plain 0.25 ETH transfer (constructed test vector — same fixture as evals/eth-transfer-confirmed). Decodes all fields and is shown for confirmation.",
+    "request": {
+      "preimage": "0x02f0012a8459682f008506fc23ac008252089495222290dd7278aa3ddd389cc1e1d165cc4bafe58803782dace9d9000080c0"
+    },
+    "expect": { "verdict": "ALLOW_WITH_CONFIRMATION", "kind": "typed-transaction-0x02" },
+    "sources": [
+      { "label": "evals/eth-transfer-confirmed", "href": "https://github.com/naz3eh/pre-sign-guard/blob/main/evals/cases.json" }
+    ]
+  },
+  {
+    "id": "personal-sign",
+    "label": "personal_sign message",
+    "blurb": "An EIP-191 v0x45 personal_sign preimage (constructed test vector — same fixture as evals/personal-sign-decoded). The guard shows the full message text before anyone signs it.",
+    "request": {
+      "preimage": "0x19457468657265756d205369676e6564204d6573736167653a0a34304920616d20617574686f72697a696e67206c6f67696e20666f72206167656e742e6578616d706c65"
+    },
+    "expect": { "verdict": "ALLOW_WITH_CONFIRMATION", "kind": "eip191-personal-sign" },
+    "sources": [
+      { "label": "evals/personal-sign-decoded", "href": "https://github.com/naz3eh/pre-sign-guard/blob/main/evals/cases.json" }
+    ]
+  },
+  {
+    "id": "eip712-permit",
+    "label": "EIP-712 Permit (unlimited approval)",
+    "blurb": "A Permit typed-data payload granting the spender the uint256 maximum (constructed test vector — same fixture as evals/eip712-permit-flagged). The guard recomputes the digest and flags the approval loudly.",
+    "request": {
+      "typedData": {
+        "domain": { "name": "USD Coin", "version": "2", "chainId": 1, "verifyingContract": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" },
+        "types": {
+          "Permit": [
+            { "name": "owner", "type": "address" },
+            { "name": "spender", "type": "address" },
+            { "name": "value", "type": "uint256" },
+            { "name": "nonce", "type": "uint256" },
+            { "name": "deadline", "type": "uint256" }
+          ]
+        },
+        "primaryType": "Permit",
+        "message": {
+          "owner": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+          "spender": "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+          "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+          "nonce": "0",
+          "deadline": "1893456000"
+        }
+      }
+    },
+    "expect": { "verdict": "ALLOW_WITH_CONFIRMATION", "kind": "eip712-typed-data" },
+    "sources": [
+      { "label": "evals/eip712-permit-flagged", "href": "https://github.com/naz3eh/pre-sign-guard/blob/main/evals/cases.json" }
+    ]
+  },
+  {
+    "id": "bare-hash",
+    "label": "Bare 32-byte digest",
+    "blurb": "A signer handed only a hash — no preimage, nothing to decode (constructed test vector — same fixture as evals/bare-hash-refused). Refusing is the only honest answer.",
+    "request": {
+      "hash": "0xd4fd4e189132273036449fc9e11198c739161b4c0116a9a2dccdfa1c492006f1"
+    },
+    "expect": { "verdict": "REFUSE", "kind": "bare-hash" },
+    "sources": [
+      { "label": "evals/bare-hash-refused", "href": "https://github.com/naz3eh/pre-sign-guard/blob/main/evals/cases.json" }
+    ]
+  },
+  {
+    "id": "unknown-prefix",
+    "label": "Unknown prefix",
+    "blurb": "A payload whose first byte matches no known signing format (constructed test vector — same fixture as evals/unknown-prefix-refused). Unknown means refused.",
+    "request": {
+      "preimage": "0x0a1234"
+    },
+    "expect": { "verdict": "REFUSE", "kind": "unknown-prefix" },
+    "sources": [
+      { "label": "evals/unknown-prefix-refused", "href": "https://github.com/naz3eh/pre-sign-guard/blob/main/evals/cases.json" }
+    ]
+  }
+]
