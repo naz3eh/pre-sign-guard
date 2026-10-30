@@ -12,11 +12,14 @@
   consume it.
 - `index.html` is the GitHub Pages site; `docs/gen-manifest.py` regenerates the
   manifest it embeds. Re-run it whenever md files move.
-- `playground/` is the Pages browser playground. `playground/src/main.ts` imports
-  the real `src/` guard — never reimplement decode logic there. After changing
-  `src/` or `playground/`, re-run `npm run build:playground` and commit the
-  regenerated `playground/bundle.js` (CI fails on a stale bundle). Examples live
-  in `playground/examples.json` — only repo fixtures or cited chain data.
+- `playground/` is the Pages browser playground: `playground/app/` is a
+  Vite + React 19 + Tailwind 4 app that imports the real `src/` guard — never
+  reimplement decode logic there. UI components are copied MIT-licensed beUI
+  source under `playground/app/src/components/motion/` (its `LICENSE` is
+  kept there). After changing `src/` or `playground/app/`, re-run
+  `npm run build:playground` and commit the regenerated `playground/index.html`
+  + `playground/assets/` (CI fails on a stale build). Examples live in
+  `playground/examples.json` — only repo fixtures or cited chain data.
 
 ## Hard rules
 

@@ -15,7 +15,9 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build:playground
-      - run: git diff --exit-code playground/bundle.js
+      - name: Fail if the committed playground output is stale
+        # git diff alone misses untracked hashed assets — porcelain catches both.
+        run: test -z "$(git status --porcelain playground/)"
       - run: npm test
       - run: npm run evals
       - name: Install Playwright browser

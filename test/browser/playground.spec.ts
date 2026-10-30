@@ -76,6 +76,17 @@ for (const ex of EXAMPLES) {
   });
 }
 
+test('clear resets inputs, result and the #r= URL', async ({ page }) => {
+  await page.locator('.example[data-example="binance14-authorization"]').click();
+  await expect(page.locator('#output .verdict-badge')).toHaveText('BLOCK');
+  await expect(page.locator('#clear-btn')).toBeVisible();
+  await page.locator('#clear-btn').click();
+  await expect(page.locator('#output')).toHaveCount(0);
+  await expect(page.locator('#in-preimage')).toHaveValue('');
+  await expect(page.locator('#in-hash')).toHaveValue('');
+  await expect(page).not.toHaveURL(/#r=/);
+});
+
 test('unlimited Permit shows the HIGH RISK flag on the badge', async ({ page }) => {
   await page.locator('.example[data-example="eip712-permit"]').click();
   await expect(page.locator('#output .verdict-badge')).toHaveText('ALLOW_WITH_CONFIRMATION');

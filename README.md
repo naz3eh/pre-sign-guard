@@ -57,9 +57,11 @@ first:
 
 **Playground:** <https://naz3eh.github.io/pre-sign-guard/playground/> — paste a
 digest, a payload, or EIP-712 typed data and get the guard's verdict instantly.
-It runs the same `src/` library as the CLI, bundled into one file — the two can
+It runs the same `src/` library as the CLI, bundled by Vite — the two can
 never disagree. Fully client-side: no backend, no wallet, no RPC, no analytics;
 nothing you paste leaves the page. Never paste a private key or seed phrase.
+UI built with [beUI](https://beui.dev) (MIT) — free components copied shadcn
+style into `playground/app/src/components/motion/`.
 
 Seven one-click examples come from the repo's own fixtures — the real Binance 14
 authorization, a set-code transaction, an ETH transfer, personal_sign, an
@@ -164,7 +166,7 @@ skills/pre-sign-guard/
 src/                            the checker (guard, rlp, abi, cli)
 bin/guard                       CLI entry
 demo/{binance14.ts,run.sh}      real-chain replay demo
-playground/                     browser playground (index.html + bundled src/)
+playground/                     browser playground (Vite+React app, built static)
 test/                           unit tests + browser smoke test
 evals/{cases.json,run.ts}       behavior case table
 docs/gen-manifest.py            regenerates the index.html manifest
